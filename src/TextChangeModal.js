@@ -22,23 +22,23 @@ class TextChangeModal extends React.Component {
     }
     render() {
         return (
-            <Modal.Dialog>
-                <Modal.Header>
-                    <Modal.Title>Change Value</Modal.Title>
-                </Modal.Header>
+                <Modal.Dialog>
+                    <Modal.Header>
+                        <Modal.Title>Change Value</Modal.Title>
+                    </Modal.Header>
 
-                <Modal.Body>
-                    <label>
-                        Value:
+                    <Modal.Body>
+                        <label>
+                            Value:
                     </label>
-                    <input type="text" value={this.state.value} onChange={(e) => this.handleChange(e)} />
-                    <br /><br />
-                    <Button bsStyle="info" onClick={this.handleSubmit}>Submit</Button>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button bsStyle="danger" onClick={this.close}>Close </Button>
-                </Modal.Footer>
-            </Modal.Dialog>
+                        <input type="text" value={this.state.value} onChange={(e) => this.handleChange(e)} />
+                        <br /><br />
+                        <Button bsStyle="info" onClick={this.handleSubmit}>Submit</Button>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button bsStyle="danger" onClick={this.close}>Close </Button>
+                    </Modal.Footer>
+                </Modal.Dialog>
         );
     }
 }
