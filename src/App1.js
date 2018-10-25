@@ -1,6 +1,6 @@
 import React from 'react';
 import './App.css';
-import { Table, Column } from 'react-virtualized';
+import { Table, Column, SortDirection, SortIndicator } from 'react-virtualized';
 import 'react-virtualized/styles.css';
 import TextChangeModal from './TextChangeModal';
 import Draggable from 'react-draggable';
@@ -21,6 +21,7 @@ function setDisabled(list) {
     }
     return list;
 }
+const TOTAL_WIDTH = 500;
 export default class App1 extends React.Component {
     constructor(props) {
         super(props);
@@ -31,11 +32,19 @@ export default class App1 extends React.Component {
             isModalShown: false,
             value: null,
             rowIndex: null,
-            columnIndex: null
+            columnIndex: null,
+            widths: {
+                name: 0.33,
+                designation: 0.33,
+                city: 0.33,
+                state: 0.33,
+                pincode: 0.33
+            }
         };
         this._cellRender = this._cellRender.bind(this);
         this.closeModal = this.closeModal.bind(this);
         this.handleChange = this.handleChange.bind(this);
+        this.headerRenderer = this.headerRenderer.bind(this);
     }
     componentWillMount() {
         this.setState({ list: list, activeList: activeList });
@@ -73,6 +82,62 @@ export default class App1 extends React.Component {
             </div>
         )
     }
+    headerRenderer = ({
+        columnData,
+        dataKey,
+        disableSort,
+        label,
+        sortBy,
+        sortDirection
+    }) => {
+        return (
+            <React.Fragment key={dataKey}>
+                <Draggable
+                    axis="x"
+                    defaultClassName="DragHandle"
+                    defaultClassNameDragging="DragHandleActive"
+                    onDrag={(event, { deltaX }) =>
+                        this.resizeRow({
+                            dataKey,
+                            deltaX
+                        })
+                    }
+                    position={{ x: 0 }}
+                    zIndex={999}>
+                    <div className="ReactVirtualized__Table__headerTruncatedText">
+                        {label}
+                    </div>
+                </Draggable>
+            </React.Fragment>
+        );
+    };
+    resizeRow = ({ dataKey, deltaX }) =>
+        this.setState(prevState => {
+
+            const prevWidths = prevState.widths;
+            const percentDelta = deltaX / TOTAL_WIDTH;
+
+            var nextDataKey;
+            switch (dataKey) {
+                case "name": nextDataKey = "designation"; break;
+                case "designation": nextDataKey = "city"; break;
+                case "city": nextDataKey = "state"; break;
+                case "state": nextDataKey = "pincode"; break;
+                case "pincode": nextDataKey = "state"; break;
+            }
+
+            return {
+                widths: {
+                    ...prevWidths,
+                    [dataKey]: prevWidths[dataKey] + percentDelta,
+                    [nextDataKey]: prevWidths[nextDataKey] - percentDelta
+                }
+            };
+        }
+        );
+
+
+
     render() {
         let editTextModal;
         if (this.state.isModalShown === true) {
@@ -80,49 +145,50 @@ export default class App1 extends React.Component {
                 columnIndex={this.state.columnIndex} handleClose={this.closeModal}
                 handleChange={this.handleChange} />
         }
+        const widths = this.state.widths;
         return (
             <React.Fragment>
-                <Draggable bounds={{ bottom: 300 }}>
-                    <Table
-                        width={500}
-                        height={300}
-                        headerHeight={20}
-                        rowHeight={30}
-                        rowCount={list.length}
-                        rowStyle={{ borderBottom: "1px solid black" }}
-                        rowGetter={({ index }) => this.state.list[index]} >
-                        <Column
-                            label='Name'
-                            dataKey='name'
-                            width={500}
-                            style={{ display: "flex", alignItems: "center" }}
-                            cellRenderer={this._cellRender} />
-                        <Column
-                            label='Designation'
-                            dataKey='designation'
-                            width={750}
-                            cellRenderer={this._cellRender} />
-                        <Column
-                            label='City'
-                            dataKey='city'
-                            width={400}
-                            cellRenderer={this._cellRender} />
-                        <Column
-                            label='State'
-                            dataKey='state'
-                            width={300}
-                            cellRenderer={this._cellRender} />
-                        <Column
-                            label='Pincode'
-                            dataKey='pincode'
-                            width={300}
-                            cellRenderer={this._cellRender} />
-                    </Table>
-                </Draggable>
+                <Table
+                    width={500}
+                    height={300}
+                    headerHeight={20}
+                    rowHeight={30}
+                    rowCount={list.length}
+                    rowStyle={{ borderBottom: "1px solid black" }}
+                    rowGetter={({ index }) => this.state.list[index]} >
+                    <Column
+                        headerRenderer={this.headerRenderer}
+                        label='Name'
+                        dataKey='name'
+                        width={widths.name * TOTAL_WIDTH}
+                        style={{ display: "flex", alignItems: "center" }}
+                        cellRenderer={this._cellRender} />
+                    <Column
+                        headerRenderer={this.headerRenderer}
+                        label='Designation'
+                        dataKey='designation'
+                        width={widths.designation * TOTAL_WIDTH}
+                        cellRenderer={this._cellRender} />
+                    <Column
+                        headerRenderer={this.headerRenderer}
+                        label='City'
+                        dataKey='city'
+                        width={widths.city * TOTAL_WIDTH}
+                        cellRenderer={this._cellRender} />
+                    <Column
+                        headerRenderer={this.headerRenderer}
+                        label='State'
+                        dataKey='state'
+                        width={widths.state * TOTAL_WIDTH}
+                        cellRenderer={this._cellRender} />
+                    <Column
+                        headerRenderer={this.headerRenderer}
+                        label='Pincode'
+                        dataKey='pincode'
+                        width={widths.pincode * TOTAL_WIDTH}
+                        cellRenderer={this._cellRender} />
+                </Table>
                 {editTextModal}
-                <Draggable>
-                    <div>wgcjdc</div>
-                </Draggable>
             </React.Fragment>
         );
     }
