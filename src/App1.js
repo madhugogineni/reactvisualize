@@ -25,6 +25,7 @@ const TOTAL_WIDTH = 500;
 export default class App1 extends React.Component {
     constructor(props) {
         super(props);
+        this.dataList = list;
         this.state = {
             list: [],
             activeList: [],
@@ -33,6 +34,7 @@ export default class App1 extends React.Component {
             value: null,
             rowIndex: null,
             columnIndex: null,
+            rowCount: list.length,
             widths: {
                 name: 0.33,
                 designation: 0.33,
@@ -45,6 +47,7 @@ export default class App1 extends React.Component {
         this.closeModal = this.closeModal.bind(this);
         this.handleChange = this.handleChange.bind(this);
         this.headerRenderer = this.headerRenderer.bind(this);
+        this.sort = this.sort.bind(this);
     }
     componentWillMount() {
         this.setState({ list: list, activeList: activeList });

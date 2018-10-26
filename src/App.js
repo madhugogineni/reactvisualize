@@ -1,6 +1,5 @@
 import React from 'react';
 import { MultiGrid } from 'react-virtualized';
-import TextChangeModal from './TextChangeModal';
 
 // Grid data as an array of arrays
 var list = addElements([]);
@@ -14,29 +13,30 @@ function addElements(list) {
 var activeList = setDisabled([]);
 
 function setDisabled(list) {
-  for (var i = 0; i < 100000; i++) {
+  for (var i = 0; i < 10; i++) {
     list.push([true, true, true, true, true, true, true, true, true, true, true, true, true, true, true]);
   }
   return list;
 }
+
+// function cellRenderer({ columnIndex, key, rowIndex, style }) {
+
+//   return (
+//     <input
+//       key={key}
+//       style={style}
+//       value={list[rowIndex][columnIndex]} disabled={activeList[rowIndex][columnIndex]} onClick={() => {
+//         activeList[rowIndex][columnIndex] = false;
+//       }} />
+//   )
+// }
+
+// Render your grid
 export default class App extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      list: [],
-      activeList: [],
-      randomvalue: Math.random(100),
-      isModalShown: false,
-      value: null,
-      rowIndex: null,
-      columnIndex: null
-    };
+    this.state = { list: [], activeList: [], randomvalue: Math.random(100) };
     this._cellRender = this._cellRender.bind(this);
-    this.closeModal = this.closeModal.bind(this);
-    this.handleChange = this.handleChange.bind(this);
-  }
-  componentWillMount() {
-    this.setState({ list: list, activeList: activeList });
   }
   handleClick(rowIndex, columnIndex) {
     var activeListArray = this.state.activeList;
@@ -44,38 +44,28 @@ export default class App extends React.Component {
     console.log(activeListArray[rowIndex][columnIndex]);
     this.setState({ activeList: activeListArray });
   }
-  handleChange(rowIndex, columnIndex, value) {
+  handleChange(rowIndex, columnIndex, e) {
     var list = this.state.list;
-    list[rowIndex][columnIndex] = value;
+    console.log(e.target.value);
+    list[rowIndex][columnIndex] = e.target.value;
     this.setState({ list: list, randomvalue: Math.random(100) });
     console.log(this.state.list[rowIndex][columnIndex]);
     this.forceUpdate();
   }
-  closeModal() {
-    this.setState({ isModalShown: false });
-  }
-  showModal(rowIndex, columnIndex) {
-    var value = this.state.list[rowIndex][columnIndex];
-    this.setState({ isModalShown: true, value: value, rowIndex: rowIndex, columnIndex: columnIndex });
+  componentWillMount() {
+    this.setState({ list: list, activeList: activeList });
   }
   _cellRender({ columnIndex, rowIndex, style, key, handleClick, handleChange }) {
     return (
       <input
         key={key}
         style={style}
-        readOnly={this.state.activeList[rowIndex][columnIndex]}
         value={this.state.list[rowIndex][columnIndex]}
-        onDoubleClick={this.showModal.bind(this, rowIndex, columnIndex)}
-        onChange={(e) => this.handleChange(rowIndex, columnIndex)} />
+        onChange={this.handleChange.bind(this, rowIndex, columnIndex)} />//disabled={activeList[rowIndex][columnIndex]} onClick={() => { activeList[rowIndex][columnIndex] = false;}}        
     )
   }
   render() {
-    let editTextModal;
-    if (this.state.isModalShown === true) {
-      editTextModal = <TextChangeModal value={this.state.value} rowIndex={this.state.rowIndex}
-        columnIndex={this.state.columnIndex} handleClose={this.closeModal}
-        handleChange={this.handleChange} />
-    }
+    console.log(this.state.list);
     return (
       <React.Fragment>
         <MultiGrid
@@ -86,8 +76,9 @@ export default class App extends React.Component {
           rowCount={this.state.list.length}
           rowHeight={50}
           width={800}
-          random={this.state.randomvalue} />
-        {editTextModal}
+          random={this.state.randomvalue}
+        />
+        <button onClick={(e) => this.handleClick(e)}>welcome</button>
       </React.Fragment>
     );
   }
