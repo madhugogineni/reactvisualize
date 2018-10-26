@@ -1,14 +1,20 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import './App.css';
-import { Table, Column, SortDirection, SortIndicator } from 'react-virtualized';
+import { Table, Column, SortDirection, SortIndicator, sortBy } from 'react-virtualized';
 import 'react-virtualized/styles.css';
 import TextChangeModal from './TextChangeModal';
 import Draggable from 'react-draggable';
 var list = addElements([]);
 
 function addElements(list) {
+    console.log(typeof list);
     for (var i = 0; i < 100000; i++) {
-        list.push({ name: 'Brian Vaughn', designation: "Software Engineer", city: "San Jose", state: "CA", pincode: "95125" });
+        if (i == 2) {
+            list.push({ name: 'Vaughn', designation: "Software Engineer", city: "San Jose", state: "CA", pincode: "95125" });
+        }
+        else
+            list.push({ name: 'Brian Vaughn', designation: "Software Engineer", city: "San Jose", state: "CA", pincode: "95125" });
         // 'Software Engineer', 'San Jose', 'CA', 95125, 'Brian Vaughn', 'Software Engineer', 'San Jose', 'CA', 95125, 'Brian Vaughn', 'Software Engineer', 'San Jose', 'CA', 95125
     }
     return list;
@@ -27,21 +33,23 @@ export default class App1 extends React.Component {
         super(props);
         this.dataList = list;
         this.state = {
-            list: [],
-            activeList: [],
+            activeList: activeList,
+            sortedList: list,
+            sortBy: 'name',
+            sortDirection: SortDirection.ASC,
             randomvalue: Math.random(100),
             isModalShown: false,
             value: null,
             rowIndex: null,
             columnIndex: null,
-            rowCount: list.length,
+            rowCount: this.dataList.length,
             widths: {
                 name: 0.33,
                 designation: 0.33,
                 city: 0.33,
                 state: 0.33,
                 pincode: 0.33
-            }
+            },
         };
         this._cellRender = this._cellRender.bind(this);
         this.closeModal = this.closeModal.bind(this);
@@ -49,8 +57,25 @@ export default class App1 extends React.Component {
         this.headerRenderer = this.headerRenderer.bind(this);
         this.sort = this.sort.bind(this);
     }
-    componentWillMount() {
-        this.setState({ list: list, activeList: activeList });
+    isSortEnabled() {
+        const list = this.dataList;
+        const rowCount = this.state;
+        return rowCount <= list.length;
+    }
+    sort({ sortBy, sortDirection }) {
+        function compare(a, b) {
+            if (a[sortBy] < b[sortBy])
+                return -1;
+            if (a[sortBy] > b[sortBy])
+                return 1;
+            return 0;
+        }
+        var mainList = list.sort(compare);
+        function asords(mainList) {
+            return sortDirection === SortDirection.DESC ? mainList.reverse() : mainList;
+        }
+        mainList = asords(mainList);
+        this.setState({ sortBy, sortDirection, sortedList: mainList });
     }
     handleClick(rowIndex, columnIndex) {
         var activeListArray = this.state.activeList;
@@ -59,9 +84,9 @@ export default class App1 extends React.Component {
         this.setState({ activeList: activeListArray });
     }
     handleChange(rowIndex, columnIndex, value) {
-        var list = this.state.list;
+        var list = this.state.sortedList;
         list[rowIndex][columnIndex] = value;
-        this.setState({ list: list, randomvalue: Math.random(100), isModalShown: false });
+        this.setState({ sortedList: list, randomvalue: Math.random(100), isModalShown: false });
         console.log(this.state.list[rowIndex][columnIndex]);
         this.forceUpdate();
     }
@@ -69,7 +94,7 @@ export default class App1 extends React.Component {
         this.setState({ isModalShown: false });
     }
     showModal(rowIndex, dataKey) {
-        var value = this.state.list[rowIndex][dataKey];
+        var value = this.state.sortedList[rowIndex][dataKey];
         this.setState({ isModalShown: true, value: value, rowIndex: rowIndex, columnIndex: dataKey });
     }
     _cellRender({ cellData, rowData, columnData, columnIndex, rowIndex, dataKey, style, key, handleClick, handleChange }) {
@@ -82,6 +107,7 @@ export default class App1 extends React.Component {
                 onDoubleClick={this.showModal.bind(this, rowIndex, dataKey)}
                 onChange={(e) => this.handleChange(rowIndex, dataKey)} >
                 {cellData}
+
             </div>
         )
     }
@@ -109,6 +135,9 @@ export default class App1 extends React.Component {
                     zIndex={999}>
                     <div className="ReactVirtualized__Table__headerTruncatedText">
                         {label}
+                        {sortBy === dataKey &&
+                            <SortIndicator sortDirection={sortDirection} />
+                        }
                     </div>
                 </Draggable>
             </React.Fragment>
@@ -138,9 +167,6 @@ export default class App1 extends React.Component {
             };
         }
         );
-
-
-
     render() {
         let editTextModal;
         if (this.state.isModalShown === true) {
@@ -149,6 +175,13 @@ export default class App1 extends React.Component {
                 handleChange={this.handleChange} />
         }
         const widths = this.state.widths;
+        const list = this.dataList;
+        const sortBy = this.state.sortBy;
+        const sortDirection = this.state.sortDirection;
+        // const sortedList = this.isSortEnabled() ?
+        //     (list.sortBy(item => item[sortBy]).update(list => sortDirection === SortDirection.DESC ?
+        //         list.reverse() : list))
+        //     : list;
         return (
             <React.Fragment>
                 <Table
@@ -158,11 +191,15 @@ export default class App1 extends React.Component {
                     rowHeight={30}
                     rowCount={list.length}
                     rowStyle={{ borderBottom: "1px solid black" }}
-                    rowGetter={({ index }) => this.state.list[index]} >
+                    rowGetter={({ index }) => this.state.sortedList[index]}
+                    sort={this.sort}
+                    sortBy={this.state.sortBy}
+                    sortDirection={this.state.sortDirection} >
                     <Column
                         headerRenderer={this.headerRenderer}
                         label='Name'
                         dataKey='name'
+                        disableSort={!this.isSortEnabled}
                         width={widths.name * TOTAL_WIDTH}
                         style={{ display: "flex", alignItems: "center" }}
                         cellRenderer={this._cellRender} />
